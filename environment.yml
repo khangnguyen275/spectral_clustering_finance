@@ -1,0 +1,10 @@
+name: math285j_project
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.12
+  - pandas
+  - numpy
+  - pip
+  - pip:
+    - git+https://github.com/alan-turing-institute/SigNet.git
