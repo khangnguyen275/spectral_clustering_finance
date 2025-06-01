@@ -1,9 +1,27 @@
+"""
+This script preprocesses the CRSP data set by validating file paths, filtering out dates with a high percentage of zero values in the 'pvCLCL' column, and saving the eligible and ineligible dates to text files.
+Functions:
+----------
+get_ordered_csv_file_names(folder_path):
+    Returns a sorted list of all '.csv.gz' file names in the specified folder.
+get_all_date_paths(path):
+    Iterates through year-based subfolders (2000-2021) in the given path, collecting full paths to all '.csv.gz' files. Returns a list of these file paths.
+check_valid_file_paths(file_path_array):
+    Checks if all paths in the provided array are valid files. Prints an error message for the first invalid path found, or confirms if all are valid.
+get_eligible_date_paths(available_dates, output_path):
+    For each file in available_dates, reads the CSV and calculates the percentage of zero values in the 'pvCLCL' column. Files with more than 10% zeros are considered ineligible. Saves eligible and ineligible file paths to separate text files and returns both lists.
+Main Execution:
+---------------
+- Sets the data path and collects all date file paths.
+- Validates the existence of all file paths.
+- Filters eligible and ineligible dates based on the 'pvCLCL' zero percentage.
+- Saves the results and prints summary statistics and execution duration.
+"""
+
 import sys
 import os
 import pandas as pd
 import time
-# This script is used to preprocess the CRSP data set by checking the validity of file paths,
-# filtering out dates with a high percentage of zero values in the 'pvCLCL' column, and saving the eligible dates to a text file.
 
 def get_ordered_csv_file_names(folder_path):
     all_file_names = os.listdir(folder_path)
@@ -72,7 +90,7 @@ def get_eligible_date_paths(available_dates, output_path):
 
 if __name__ == "__main__":
     start_time = time.time()
-    path = '/Users/khang/Desktop/math285j_project/CRSP Data Set'
+    path = 'F:/spectral_clustering_finance/data/drive-download-20250531T145738Z-1-001/CRSP Data Set'
     available_dates = get_all_date_paths(path)
     check_valid_file_paths(available_dates)
     eligible_dates_list_path = path + '/eligible_dates.txt'
