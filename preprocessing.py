@@ -90,8 +90,24 @@ def get_eligible_date_paths(available_dates, output_path):
 
 if __name__ == "__main__":
     start_time = time.time()
-    #path = 'F:/spectral_clustering_finance/data/drive-download-20250531T145738Z-1-001/CRSP Data Set'
-    path = '/Users/lunjizhu/Desktop/MATH 285J Project Workspace/spectral_clustering_finance/data'
+    possible_paths = [
+        '/Users/khang/Desktop/math285j_project/CRSP Data Set',
+        '/Users/lunjizhu/Desktop/MATH 285J Project Workspace/spectral_clustering_finance/data',
+        'F:/spectral_clustering_finance/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
+        '/Users/yifangu/Desktop/MATH 285J/285J Project/spectral_clustering_finance/data'
+    ]
+
+    path = None
+    for p in possible_paths:
+        if os.path.isdir(p):
+            path = p
+            print(f"Using data path: {path}")
+            break
+
+    if path is None:
+        print("Error: No valid data path found.")
+        sys.exit(1)
+        
     available_dates = get_all_date_paths(path)
     check_valid_file_paths(available_dates)
     eligible_dates_list_path = path + '/eligible_dates.txt'

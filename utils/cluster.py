@@ -65,6 +65,30 @@ def plot_correlation_matrix(correlation_matrix, title='Correlation Matrix Heatma
     plt.ylabel('Stocks')
     plt.show()
 
+def get_num_of_clusters(corr, thr):
+  """
+  Determines the minimum number of clusters (principal components) required to explain a given threshold of the total variance in a correlation matrix.
+
+  Parameters:
+    corr (np.ndarray): The correlation matrix (square, symmetric).
+    thr (float): The threshold (between 0 and 1) representing the fraction of total variance to be explained.
+
+  Returns:
+    int: The minimum number of clusters (eigenvalues) needed to reach or exceed the specified threshold of explained variance.
+
+  Notes:
+    - Uses eigenvalue decomposition to compute explained variance.
+    - Assumes that the input matrix is symmetric and positive semi-definite.
+  """
+  eigs = eigh(corr, eigvals_only=True)
+  eigs = np.flip(np.sort(eigs))
+  sum_of_eigs = np.sum(eigs)
+  running = 0
+  for i in range(len(eigs)):
+    running += eigs[i]
+    if running / sum_of_eigs >= thr:
+      return i+1
+
 def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clustering_window=100, default_cluster_num=15):
   R = R_cov.copy()
   market = market_cov.copy()
@@ -86,6 +110,7 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clust
       if num_med == 'var':
         k = get_num_of_clusters(cov, 0.9)
       if num_med == 'mar-pa':
+        num_of_stocks = RRT_num_clusters.shape[1]
         rho = num_of_stocks / clustering_window
         lambda_plus = (1 + np.sqrt(rho)) ** 2
         print(lambda_plus)
@@ -116,10 +141,10 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clust
   # cluster stocks based on given industry data
   # any stock that does not belong to the given list of stock-industry pairs
   # is clustered into one single, separate cluster
-  if cl_med == 'industry':
-    ticker_to_cluster = dict(zip(sector['SPY.1'], sector['0']))
-    R['cluster'] = R['ticker'].map(ticker_to_cluster)
-    R['cluster'] = pd.to_numeric(R['cluster'], errors='coerce').astype('Int64')
-    max_cluster = R['cluster'].max()
-    R['cluster'] = R['cluster'].fillna(max_cluster + 1).astype(int)
+  # if cl_med == 'industry':
+  #   ticker_to_cluster = dict(zip(sector['SPY.1'], sector['0']))
+  #   R['cluster'] = R['ticker'].map(ticker_to_cluster)
+  #   R['cluster'] = pd.to_numeric(R['cluster'], errors='coerce').astype('Int64')
+  #   max_cluster = R['cluster'].max()
+  #   R['cluster'] = R['cluster'].fillna(max_cluster + 1).astype(int)
   return R

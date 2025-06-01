@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
-from cluster import *
+from utils.cluster import *
 from preprocessing import *
-from rmatrix import *
 import argparse
+
+from utils.helper import get_eligible_date_paths_from_file
 
 path = '/Users/khang/Desktop/math285j_project/CRSP Data Set'
 eligible_dates_list_path = path + '/eligible_dates.txt'

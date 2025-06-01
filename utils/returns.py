@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def construct_clcl_price_matrix(eligible_dates,
+def construct_short_price_matrix(eligible_dates,
                               lookback_window = 60,
                               lookforward_window = 3,
                               start_date = 0):
@@ -149,12 +149,12 @@ def get_sliding_window_data(eligible_dates,
 
     Note:
             This function depends on the helper functions:
-                    - construct_clcl_price_matrix
+                    - construct_short_price_matrix
                     - construct_return_df
                     - clean_return_df
             Ensure these are defined and imported in the module.
     """
-    close_price = construct_clcl_price_matrix(
+    close_price = construct_short_price_matrix(
         eligible_dates,
         lookback_window=lookback_window,
         lookforward_window=lookforward_window,
