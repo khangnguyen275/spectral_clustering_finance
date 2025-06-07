@@ -115,8 +115,8 @@ def clean_return_df(return_df,
 
   # Filter the DataFrame based on the mask
   cleaned_return_df = return_df[rows_to_keep_mask].copy()
-  print("Original DataFrame shape:", return_df.shape)
-  print("Cleaned DataFrame shape:", cleaned_return_df.shape)
+  # print("Original DataFrame shape:", return_df.shape)
+  # print("Cleaned DataFrame shape:", cleaned_return_df.shape)
 
   # print("\nCleaned Return Matrix (first 5 rows):")
   # print(cleaned_return_df.head())
