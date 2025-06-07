@@ -5,7 +5,7 @@ possible_paths = [
         '/Users/lunjizhu/Desktop/MATH 285J Project Workspace/spectral_clustering_finance/data',
         'F:/spectral_clustering_finance/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
         '/Users/yifangu/Desktop/MATH 285J/285J Project/spectral_clustering_finance/data'
-    ]
+]
 
 path = None
 for p in possible_paths:
@@ -39,7 +39,10 @@ print(f"Execution time: {end_time - start_time:.2f} seconds")
 import matplotlib.pyplot as plt
 cumulative_pnl = np.cumsum(daily_PnL)
 
-results_dir = os.path.join(path, 'results')
+
+# Save the plot in a 'results' folder in the same directory as this .py file
+script_dir = os.path.dirname(os.path.abspath(__file__))
+results_dir = os.path.join(script_dir, 'results')
 os.makedirs(results_dir, exist_ok=True)
 plot_path = os.path.join(results_dir, 'cumulative_pnl.png')
 
