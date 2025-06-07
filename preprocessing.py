@@ -94,7 +94,7 @@ if __name__ == "__main__":
         '/Users/khang/Desktop/math285j_project/CRSP Data Set',
         '/Users/lunjizhu/Desktop/MATH 285J Project Workspace/spectral_clustering_finance/data',
         'F:/spectral_clustering_finance/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
-        '/Users/yifangu/Desktop/MATH 285J/285J Project/spectral_clustering_finance/data'
+        '/Users/yifangu/Desktop/MATH 285J/285J Project/spectral_clustering_finance/data/CRSP Data Set'
     ]
 
     path = None
