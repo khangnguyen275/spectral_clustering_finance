@@ -37,6 +37,18 @@ end_time = time.time()
 print(f"Execution time: {end_time - start_time:.2f} seconds")
 
 import matplotlib.pyplot as plt
+
+# Get the dates from eligible_dates (assume each path ends with YYYYMMDD.csv.gz)
+import re
+date_labels = []
+date_pattern = re.compile(r'(\\d{8})\\.csv\\.gz$')
+for path in eligible_dates[:len(daily_PnL)]:
+    match = re.search(r'(\\d{8})\\.csv\\.gz$', path)
+    if match:
+        date_labels.append(match.group(1))
+    else:
+        date_labels.append("")
+
 cumulative_pnl = np.cumsum(daily_PnL)
 
 
@@ -46,12 +58,19 @@ results_dir = os.path.join(script_dir, 'results')
 os.makedirs(results_dir, exist_ok=True)
 plot_path = os.path.join(results_dir, 'cumulative_pnl.png')
 
-plt.figure(figsize=(12, 6))
-plt.plot(cumulative_pnl)
+
+plt.figure(figsize=(14, 7))
+plt.plot(date_labels, cumulative_pnl)
 plt.title('Cumulative Daily PnL')
-plt.xlabel('Trading Days')
+plt.xlabel('Date')
 plt.ylabel('Cumulative PnL')
+plt.xticks(rotation=45, fontsize=8)
 plt.grid(True)
+# Show only a subset of x-ticks for readability
+if len(date_labels) > 20:
+    step = max(1, len(date_labels) // 20)
+    plt.xticks(date_labels[::step])
+plt.tight_layout()
 plt.savefig(plot_path)
 plt.close()
 print(f"Plot saved to {plot_path}")
