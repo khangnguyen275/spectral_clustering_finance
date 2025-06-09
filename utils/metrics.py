@@ -16,3 +16,6 @@ def calculate_Return_Rate(R_curr: pd.DataFrame, window_width: int):
     num_clusters = R_curr['cluster'].nunique()
     PnL = np.dot(daily_return, bet_size)/(2 * num_clusters)
     return PnL
+
+def calculate_Sharpe_Ratio(PnLs):
+    return (np.mean(PnLs) / np.std(PnLs)) * np.sqrt(252)

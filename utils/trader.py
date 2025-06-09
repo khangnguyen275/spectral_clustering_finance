@@ -177,9 +177,9 @@ def execute_trading_strategy(win_threshold: float,
                             w = 5,
                             eligible_dates = None,
                             cl_med = 'SPONGE',
-                            num_med = 'var',
+                            num_med = 'self',
                             weighting_scheme = 'uniform',
-                            cluster_selection = True,
+                            cluster_selection = False,
                             num_dates = None):
     # record the total number of days
     if num_dates is None:

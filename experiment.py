@@ -64,6 +64,7 @@ daily_PnL, dates = execute_trading_strategy(win_threshold=0.1,
 end_time = time.time()
 print(f"Execution time: {end_time - start_time:.2f} seconds")
 
+sharpe_ratio = calculate_Sharpe_Ratio(daily_PnL)
 cumulative_pnl = np.cumsum(daily_PnL)
 
 # Save the plot in a 'results' folder in the same directory as this .py file
@@ -78,9 +79,13 @@ run_setting = str(cluster_selection) + "_" + weight_type + "_" + str(winsorize_r
 
 plot_path = os.path.join(results_dir, f'{run_setting}_cumulative_pnl.jpg')
 PnL_path = os.path.join(results_dir, f'{run_setting}_daily_PnL')
+Sharpe_path = os.path.join(results_dir, f'{run_setting}_Sharpe_Ratio')
 date_path = os.path.join(results_dir, f'{run_setting}_date')
 
+
+
 np.savetxt(PnL_path + '.txt', daily_PnL)
+np.savetxt(Sharpe_path + '.txt', sharpe_ratio)
 np.savetxt(date_path + '.txt', dates, fmt='%s')
 
 plt.figure(figsize=(14, 7))
