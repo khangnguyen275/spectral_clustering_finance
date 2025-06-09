@@ -3,6 +3,7 @@ import os
 import argparse
 import re
 import matplotlib.pyplot as plt
+from utils.metrics import *
 
 possible_paths = [
         '/Users/khang/Desktop/math285j_project/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
