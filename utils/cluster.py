@@ -96,6 +96,11 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clust
     # compute the correlation matrix used for clusterization
     residual_returns_matrix = get_market_residual_returns(R, market)
     residual_returns_matrix = residual_returns_matrix.astype(float).T
+    
+    # """ WINSORIZATION! """
+    # for i in range(residual_returns_matrix.shape[0]):
+    #     residual_returns_matrix[i, :] = winsorize(residual_returns_matrix[i, :])
+    
     corr = compute_correlation_matrix(residual_returns_matrix)
 
     # choose which clusterization method to use

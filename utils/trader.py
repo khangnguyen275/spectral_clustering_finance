@@ -107,6 +107,7 @@ def execute_trading_strategy(win_threshold: float,
     current_date = lookback_window
     # record daily_PnL
     daily_PnL = []
+    curr_date_str = []
 
 # renew_portfolio criteria
     # trading_period = 0
@@ -121,6 +122,13 @@ def execute_trading_strategy(win_threshold: float,
                                                     lookback_window = lookback_window,
                                                     lookforward_window=lookforward_window,
                                                     start_date = start_date)
+        
+        # """ WINSORIZATION! """
+        # R_curr_np = R_curr.select_dtypes(include='number').to_numpy()
+        # for j in range(R_curr_np.shape[1]):
+        #     R_curr_np[:,j] = winsorize(R_curr_np[:,j])
+        # R_curr.iloc[:, 1:] = R_curr_np
+        
         # R_cov is the matrix containing the return in the 60 days lookback window
         R_cov = R_curr.iloc[:, : lookback_window + 1]
         market_cov = market_curr[: lookback_window]
@@ -140,8 +148,15 @@ def execute_trading_strategy(win_threshold: float,
 
             daily_PnL += PnLs.tolist()
             current_date += index + 1
+            # record date stamps 
+            for i in range(index+1):
+                curr_date_str.append(R_curr.columns[-lookforward_window+i])
         else:
             daily_PnL += PnLs.tolist()
             current_date += lookforward_window
+            # record date stamps
+            for i in range(lookforward_window):
+                curr_date_str.append(R_curr.columns[-lookforward_window+i])
         print(f"Day {current_date+1}: PnL = {PnLs}")
-    return daily_PnL
+    date = pd.to_datetime(curr_date_str, format='%Y%m%d')
+    return daily_PnL, date
