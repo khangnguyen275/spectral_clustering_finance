@@ -1,5 +1,9 @@
 import sys
 import os
+import argparse
+import re
+import matplotlib.pyplot as plt
+
 possible_paths = [
         '/Users/khang/Desktop/math285j_project/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
         '/Users/lunjizhu/Desktop/MATH 285J Project Workspace/spectral_clustering_finance/data',
@@ -22,17 +26,38 @@ from utils.returns import *
 from utils.trader import execute_trading_strategy
 from utils.helper import *
 
+parser = argparse.ArgumentParser(description="Spectral Clustering Finance Experiment")
+parser.add_argument('--cluster_selection', action='store_true', help='Enable cluster selection (default: False)')
+parser.add_argument('--weight_type', choices=['uniform', 'linear', 'exponential'], default='uniform', help='Type of weighting to use (default: uniform)')
+parser.add_argument('--winsorize_raw', action='store_true', help='Enable windsorization for the raw returns (default: False)')
+parser.add_argument('--winsorize_res', action='store_true', help='Enable windsorization for the res returns (default: False)')
+parser.add_argument('--winsor_param', type=float, default=0.05, help='Winsorization parameter (default: 0.05)')
+args = parser.parse_args()
+
+cluster_selection = args.cluster_selection
+weight_type = args.weight_type
+winsorize_raw = args.winsorize_raw
+winsorize_res = args.winsorize_res
+winsor_param = args.winsor_param
+
+print(f"cluster_selection: {cluster_selection}, weight_type: {weight_type}, windsorize_raw: {winsorize_raw}, windsorize_res: {winsorize_res}, winsor_param: {winsor_param}")
+
 eligible_dates_txt_output = path + '/eligible_dates.txt'
 eligible_dates = get_eligible_date_paths_from_file(eligible_dates_txt_output)
 print(f"Eligible dates loaded: {eligible_dates}")
 import time
 
 start_time = time.time()
-daily_PnL, date = execute_trading_strategy(win_threshold=0.05,
+daily_PnL, dates = execute_trading_strategy(win_threshold=0.1,
                                      lookback_window=60,
                                      lookforward_window=3,
                                      w=5,
-                                     eligible_dates=eligible_dates)
+                                     eligible_dates=eligible_dates,
+                                     cluster_selection=cluster_selection,
+                                     weighting_scheme=weight_type,
+                                     winsorize_raw=winsorize_raw,
+                                     winsorize_res=winsorize_res,
+                                     winsor_param=winsor_param)
 end_time = time.time()
 print(f"Execution time: {end_time - start_time:.2f} seconds")
 
@@ -53,19 +78,19 @@ PnL_path = os.path.join(results_dir, 'daily_PnL.npy')
 date_path = os.path.join(results_dir, 'date.npy')
 
 np.save(PnL_path, daily_PnL)
-np.save(date_path, date)
+np.save(date_path, dates)
 
 plt.figure(figsize=(14, 7))
-plt.plot(date, cumulative_pnl)
+plt.plot(dates, cumulative_pnl)
 plt.title('Cumulative Daily PnL')
 plt.xlabel('Date')
 plt.ylabel('Cumulative PnL')
 plt.xticks(rotation=45, fontsize=8)
 plt.grid(True)
 # Show only a subset of x-ticks for readability
-if len(date) > 20:
-    step = max(1, len(date) // 20)
-    plt.xticks(date[::step])
+if len(dates) > 20:
+    step = max(1, len(dates) // 20)
+    plt.xticks(dates[::step])
 plt.tight_layout()
 plt.savefig(plot_path)
 plt.close()
