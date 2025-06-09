@@ -114,7 +114,8 @@ def execute_trading_strategy(win_threshold: float,
     # trading_PnL = 0
     # update_portfolio = True
 
-    while current_date + lookforward_window < num_dates:
+    # while current_date + lookforward_window < num_dates:
+    while current_date + lookforward_window < 200:
         start_date = current_date - lookback_window
         # size of R_curr: #stocks x (1 ticker + 63 days)
         # size of market_curr: 63
