@@ -28,7 +28,7 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5):
     
 
     # Identify winners and losers based on the threshold value p
-    threshold = 0.001
+    threshold = 0
 
     # Start with zeros
     R_curr['trade'] = 0
@@ -37,7 +37,7 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5):
     R_curr.loc[R_curr['deviation'] > threshold, 'trade'] = 1
 
     # Set -1 where deviation is below threshold signifying losers
-    R_curr.loc[R_curr['deviation'] < threshold, 'trade'] = -1
+    R_curr.loc[R_curr['deviation'] < - threshold, 'trade'] = -1
 
     return R_curr
 
@@ -118,7 +118,7 @@ def execute_trading_strategy(win_threshold: float,
     # trading_PnL = 0
     # update_portfolio = True
 
-    while current_date + lookforward_window < 200:
+    while current_date + lookforward_window < num_dates:
         start_date = current_date - lookback_window
         # size of R_curr: #stocks x (1 ticker + 63 days)
         # size of market_curr: 63
