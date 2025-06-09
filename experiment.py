@@ -51,7 +51,7 @@ eligible_dates = get_eligible_date_paths_from_file(eligible_dates_txt_output)
 import time
 
 start_time = time.time()
-daily_PnL, dates = execute_trading_strategy(win_threshold=0.1,
+daily_PnL, dates, success_rate = execute_trading_strategy(win_threshold=0.1,
                                      lookback_window=60,
                                      lookforward_window=3,
                                      w=5,
@@ -82,12 +82,13 @@ plot_path = os.path.join(results_dir, f'{run_setting}_cumulative_pnl.jpg')
 PnL_path = os.path.join(results_dir, f'{run_setting}_daily_PnL')
 Sharpe_path = os.path.join(results_dir, f'{run_setting}_Sharpe_Ratio')
 date_path = os.path.join(results_dir, f'{run_setting}_date')
-
+success_rate_path = os.path.join(results_dir, f'{run_setting}_success_rate')
 
 
 np.savetxt(PnL_path + '.txt', daily_PnL)
 np.savetxt(Sharpe_path + '.txt', sharpe_ratio)
 np.savetxt(date_path + '.txt', dates, fmt='%s')
+np.savetxt(success_rate_path + '.txt', success_rate)
 
 plt.figure(figsize=(14, 7))
 plt.plot(dates, cumulative_pnl)

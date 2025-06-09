@@ -193,6 +193,8 @@ def execute_trading_strategy(win_threshold: float,
     # record daily_PnL
     daily_PnL = []
     curr_date_str = []
+    success = 0
+    num_period = 0
 
 # renew_portfolio criteria
     # trading_period = 0
@@ -200,7 +202,8 @@ def execute_trading_strategy(win_threshold: float,
     # update_portfolio = True
 
     # while current_date + lookforward_window < num_dates:
-    while current_date + lookforward_window < num_dates:
+    while current_date + lookforward_window < 200:
+        num_period += 1
         start_date = current_date - lookback_window
         # size of R_curr: #stocks x (1 ticker + 63 days)
         # size of market_curr: 63
@@ -253,6 +256,7 @@ def execute_trading_strategy(win_threshold: float,
         
 
         if np.max(Cumpnl) > win_threshold:
+            success += 1
             index = np.argmax(Cumpnl > win_threshold)
             PnLs = PnLs[:index+1]
 
@@ -261,6 +265,7 @@ def execute_trading_strategy(win_threshold: float,
             # record date stamps 
             for i in range(index+1):
                 curr_date_str.append(R_curr.columns[-lookforward_window+i])
+            
         else:
             daily_PnL += PnLs.tolist()
             current_date += lookforward_window
@@ -269,4 +274,5 @@ def execute_trading_strategy(win_threshold: float,
                 curr_date_str.append(R_curr.columns[-lookforward_window+i])
         print(f"Day {current_date+1}: PnL = {PnLs}")
     date = pd.to_datetime(curr_date_str, format='%Y%m%d')
-    return daily_PnL, date
+
+    return daily_PnL, date, float(success) / float(num_period)
