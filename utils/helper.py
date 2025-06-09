@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_eligible_date_paths_from_file(file_path):
     eligible_dates_from_file = []
     # Open the file in read mode ('r')
@@ -16,3 +18,22 @@ def get_eligible_date_paths_from_file(file_path):
     except Exception as e:
         print(f"An error occurred while reading the file: {e}")
     return eligible_dates_from_file
+
+def winsorize(data, lower_pct=0.01, upper_pct=0.99):
+    """
+    Winsorize a list or array of numbers by replacing values below the lower 
+    percentile and above the upper percentile with the respective percentile values.
+
+    Parameters:
+        data (list or np.ndarray): The input numeric data.
+        lower_pct (float): Lower percentile threshold (e.g., 0.05 for 5%).
+        upper_pct (float): Upper percentile threshold (e.g., 0.95 for 95%).
+
+    Returns:
+        np.ndarray: Winsorized version of the input data.
+    """
+    data = np.asarray(data)
+    lower_bound = np.percentile(data, lower_pct * 100)
+    upper_bound = np.percentile(data, upper_pct * 100)
+    
+    return np.clip(data, lower_bound, upper_bound)

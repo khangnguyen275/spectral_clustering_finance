@@ -3,6 +3,7 @@ import numpy as np
 
 from utils.cluster import clusterize
 from utils.returns import get_sliding_window_data
+from utils.helper import winsorize
 
 def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, threshold = 0):
     R_curr = R_curr.copy()

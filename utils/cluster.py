@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 from .returns import get_market_residual_returns
+from utils.helper import winsorize
 
 def compute_correlation_matrix(residual_returns_matrix, w = 5):
     """
