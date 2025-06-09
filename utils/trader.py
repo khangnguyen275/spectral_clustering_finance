@@ -169,7 +169,7 @@ def execute_trading_strategy(win_threshold: float,
     # update_portfolio = True
 
     # while current_date + lookforward_window < num_dates:
-    while current_date + lookforward_window < 200:
+    while current_date + lookforward_window < 1000:
         start_date = current_date - lookback_window
         # size of R_curr: #stocks x (1 ticker + 63 days)
         # size of market_curr: 63
@@ -195,7 +195,10 @@ def execute_trading_strategy(win_threshold: float,
         lookback = -1 * lookforward_window
         future_return = R_curr.iloc[:, lookback:].to_numpy()
         PnLs = future_return.T @ bet_size
+        num_clusters = R_cov['cluster'].nunique()
+        PnLs = PnLs / (2 * num_clusters)
         Cumpnl = np.cumsum(PnLs)
+        
 
         if np.max(Cumpnl) > win_threshold:
             index = np.argmax(Cumpnl > win_threshold)
