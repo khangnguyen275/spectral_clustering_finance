@@ -90,7 +90,7 @@ def get_num_of_clusters(corr, thr):
         if running / sum_of_eigs >= thr:
             return i+1
 
-def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clustering_window=20, default_cluster_num=40):
+def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winsorize_res, winsor_param, clustering_window=20, default_cluster_num=40):
     R = R_cov.copy()
     market = market_cov.copy()
 
@@ -98,9 +98,9 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clust
     residual_returns_matrix = get_market_residual_returns(R, market)
     residual_returns_matrix = residual_returns_matrix.astype(float).T
     
-    # """ WINSORIZATION! """
-    # for i in range(residual_returns_matrix.shape[0]):
-    #     residual_returns_matrix[i, :] = winsorize(residual_returns_matrix[i, :])
+    if winsorize_res:
+        for i in range(residual_returns_matrix.shape[0]):
+            residual_returns_matrix[i, :] = winsorize(residual_returns_matrix[i, :], winsor_param, 1-winsor_param)
     
     corr = compute_correlation_matrix(residual_returns_matrix)
 

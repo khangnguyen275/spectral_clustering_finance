@@ -177,7 +177,10 @@ def execute_trading_strategy(win_threshold: float,
                             w = 5,
                             eligible_dates = None,
                             cl_med = 'SPONGE',
-                            num_med = 'self',
+                            num_med = 'var',
+                            winsorize_raw = False,
+                            winsorize_res = False,
+                            winsor_param = 0.05,
                             weighting_scheme = 'uniform',
                             cluster_selection = False,
                             num_dates = None):
@@ -206,11 +209,11 @@ def execute_trading_strategy(win_threshold: float,
                                                     lookforward_window=lookforward_window,
                                                     start_date = start_date)
         
-        # """ WINSORIZATION! """
-        # R_curr_np = R_curr.select_dtypes(include='number').to_numpy()
-        # for j in range(R_curr_np.shape[1]):
-        #     R_curr_np[:,j] = winsorize(R_curr_np[:,j])
-        # R_curr.iloc[:, 1:] = R_curr_np
+        if winsorize_raw:
+            R_curr_np = R_curr.select_dtypes(include='number').to_numpy()
+            for j in range(R_curr_np.shape[1]):
+                R_curr_np[:,j] = winsorize(R_curr_np[:,j], winsor_param, 1-winsor_param)
+            R_curr.iloc[:, 1:] = R_curr_np
         
         # R_cov is the matrix containing the return in the 60 days lookback window
         R_cov = R_curr.iloc[:, : lookback_window + 1]
@@ -222,7 +225,7 @@ def execute_trading_strategy(win_threshold: float,
         residual_returns_matrix = residual_returns_matrix.astype(float).T
         corr = compute_correlation_matrix(residual_returns_matrix)
         
-        R_cov = clusterize(cl_med, num_med, R_cov, market_cov)
+        R_cov = clusterize(cl_med, num_med, R_cov, market_cov, winsorize_res, winsor_param)
         
         if cluster_selection:
             selected_mask, selected_clusters = discard_bottom_quarter_clusters(corr, R_cov['cluster'].values)
