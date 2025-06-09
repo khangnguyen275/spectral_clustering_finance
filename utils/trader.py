@@ -4,7 +4,7 @@ import numpy as np
 from utils.cluster import clusterize
 from utils.returns import get_sliding_window_data
 
-def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5):
+def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, threshold = 0):
     R_curr = R_curr.copy()
 
     # On each day, calculate the deviation from the mean of the cluster for each stock
@@ -24,11 +24,6 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5):
     R_curr['deviation'] = R_curr[window_cols].sum(axis=1)
     # Drop the non-numeric columns, then sum all deviations within the sliding window
     #R_curr['deviation'] = R_curr.drop(columns=['ticker', 'cluster']).sum(axis=1)
-    
-    
-
-    # Identify winners and losers based on the threshold value p
-    threshold = 0.001
 
     # Start with zeros
     R_curr['trade'] = 0
@@ -37,7 +32,7 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5):
     R_curr.loc[R_curr['deviation'] > threshold, 'trade'] = 1
 
     # Set -1 where deviation is below threshold signifying losers
-    R_curr.loc[R_curr['deviation'] < threshold, 'trade'] = -1
+    R_curr.loc[R_curr['deviation'] < - threshold, 'trade'] = -1
 
     return R_curr
 
