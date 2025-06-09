@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from utils.cluster import clusterize
-from utils.returns import get_sliding_window_data
-from utils.helper import winsorize
+from utils.cluster import *
+from utils.returns import *
+from utils.helper import *
 
 def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, threshold = 0):
     R_curr = R_curr.copy()
@@ -66,6 +66,30 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, thresho
 
 #     return R_curr
 
+def discard_bottom_quarter_clusters(corr_matrix, cluster_vector):
+    """
+    Discards the bottom 10 clusters with the lowest correlation_object_function term values.
+    Returns a mask (boolean array) indicating which stocks belong to the selected clusters.
+    """
+    unique_clusters = np.unique(cluster_vector)
+    # Compute the term for each cluster
+    cluster_terms = []
+    for cluster_idx in unique_clusters:
+        mask = (cluster_vector == cluster_idx)
+        cluster_size = np.sum(mask)
+        if cluster_size > 1:
+            term = (np.sum(corr_matrix[mask][:, mask]) - cluster_size) / (cluster_size ** 2 - cluster_size)
+        else:
+            term = np.nan  # Avoid division by zero for singleton clusters
+        cluster_terms.append((cluster_idx, term))
+    # Sort clusters by term (ascending, lower is worse)
+    sorted_clusters = sorted([ct for ct in cluster_terms if not np.isnan(ct[1])], key=lambda x: x[1])
+    # Discard bottom 1/4 clusters
+    n_discard = len(sorted_clusters) // 4
+    selected_clusters = set([cl for cl, _ in sorted_clusters[n_discard:]])
+    # Create mask for stocks in selected clusters
+    selected_mask = np.array([cl in selected_clusters for cl in cluster_vector])
+    return selected_mask, selected_clusters
 
 def assign_stock_weights(R_curr: pd.DataFrame, weighting_scheme='uniform'):
     R_curr = R_curr.copy()
@@ -154,9 +178,13 @@ def execute_trading_strategy(win_threshold: float,
                             eligible_dates = None,
                             cl_med = 'SPONGE',
                             num_med = 'var',
-                            weighting_scheme = 'uniform'):
+                            weighting_scheme = 'uniform',
+                            cluster_selection = True,
+                            num_dates = None):
     # record the total number of days
-    num_dates = len(eligible_dates)
+    if num_dates is None:
+        num_dates = len(eligible_dates)
+    
     # first trading day
     current_date = lookback_window
     # record daily_PnL
@@ -169,7 +197,7 @@ def execute_trading_strategy(win_threshold: float,
     # update_portfolio = True
 
     # while current_date + lookforward_window < num_dates:
-    while current_date + lookforward_window < 1000:
+    while current_date + lookforward_window < num_dates:
         start_date = current_date - lookback_window
         # size of R_curr: #stocks x (1 ticker + 63 days)
         # size of market_curr: 63
@@ -188,12 +216,33 @@ def execute_trading_strategy(win_threshold: float,
         R_cov = R_curr.iloc[:, : lookback_window + 1]
         market_cov = market_curr[: lookback_window]
         # clusterize the stocks
+        R = R_cov.copy()
+        market = market_cov.copy()
+        residual_returns_matrix = get_market_residual_returns(R, market)
+        residual_returns_matrix = residual_returns_matrix.astype(float).T
+        corr = compute_correlation_matrix(residual_returns_matrix)
+        
         R_cov = clusterize(cl_med, num_med, R_cov, market_cov)
-        R_cov = assign_stock_weights(identify_stocks(R_cov), weighting_scheme = weighting_scheme)
-        # calculate PnLs for the lookforward window
-        bet_size = R_cov['notional'].to_numpy()
-        lookback = -1 * lookforward_window
-        future_return = R_curr.iloc[:, lookback:].to_numpy()
+        
+        if cluster_selection:
+            selected_mask, selected_clusters = discard_bottom_quarter_clusters(corr, R_cov['cluster'].values)
+            R_cov = R_cov[selected_mask].reset_index(drop=True)
+            R_cov = assign_stock_weights(identify_stocks(R_cov))
+            # calculate PnLs for the lookforward window
+            bet_size = R_cov['notional'].to_numpy()
+            lookback = -1 * lookforward_window
+            future_return = R_curr.iloc[:, lookback:].to_numpy()
+            future_return = future_return[selected_mask, :]
+            
+            
+        else:
+            R_cov = assign_stock_weights(identify_stocks(R_cov), weighting_scheme = weighting_scheme)
+            # calculate PnLs for the lookforward window
+            bet_size = R_cov['notional'].to_numpy()
+            lookback = -1 * lookforward_window
+            future_return = R_curr.iloc[:, lookback:].to_numpy()
+
+
         PnLs = future_return.T @ bet_size
         num_clusters = R_cov['cluster'].nunique()
         PnLs = PnLs / (2 * num_clusters)
