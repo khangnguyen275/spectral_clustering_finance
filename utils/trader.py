@@ -67,33 +67,85 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, thresho
 #     return R_curr
 
 
-def assign_stock_weights(R_curr: pd.DataFrame):
+def assign_stock_weights(R_curr: pd.DataFrame, weighting_scheme='uniform'):
+    R_curr = R_curr.copy()
+    R_curr['notional'] = 0.0  # Initialize the 'notional' column with zeros
+    
+    if weighting_scheme == 'uniform':
+        # Calculate nK and mK for each cluster
+        cluster_counts = R_curr.groupby('cluster')['trade'].value_counts().unstack(fill_value=0)
 
-  R_curr = R_curr.copy()
+        # Calculate the notional values
+        # If trade is +1, notional is 1 / number of +1 trades in the cluster
+        # If trade is -1, notional is 1 / number of -1 trades in the cluster
+        # If trade is 0, notional is 0
+        for cluster_id in cluster_counts.index:
+            nK = cluster_counts.loc[cluster_id].get(1, 0)  # Get count of +1 trades, default to 0 if no +1
+            mK = cluster_counts.loc[cluster_id].get(-1, 0) # Get count of -1 trades, default to 0 if no -1
 
-  # Calculate nK and mK for each cluster
-  cluster_counts = R_curr.groupby('cluster')['trade'].value_counts().unstack(fill_value=0)
+            # Assign notional for +1 trades in the current cluster, handling division by zero
+            if nK > 0:
+                R_curr.loc[(R_curr['cluster'] == cluster_id) & (R_curr['trade'] == 1), 'notional'] = -1 / nK
 
-  # Calculate the notional values
-  # If trade is +1, notional is 1 / number of +1 trades in the cluster
-  # If trade is -1, notional is 1 / number of -1 trades in the cluster
-  # If trade is 0, notional is 0
-  R_curr['notional'] = 0.0  # Initialize the 'notional' column with zeros
+            # Assign notional for -1 trades in the current cluster, handling division by zero
+            if mK > 0:
+                R_curr.loc[(R_curr['cluster'] == cluster_id) & (R_curr['trade'] == -1), 'notional'] = 1 / mK
 
-  for cluster_id in cluster_counts.index:
-      nK = cluster_counts.loc[cluster_id].get(1, 0)  # Get count of +1 trades, default to 0 if no +1
-      mK = cluster_counts.loc[cluster_id].get(-1, 0) # Get count of -1 trades, default to 0 if no -1
+    elif weighting_scheme == 'linear':
+        # Apply linear weighting within each cluster
+        for cluster_id in R_curr['cluster'].unique():
+            cluster_mask = R_curr['cluster'] == cluster_id
 
-      # Assign notional for +1 trades in the current cluster, handling division by zero
-      if nK > 0:
-          R_curr.loc[(R_curr['cluster'] == cluster_id) & (R_curr['trade'] == 1), 'notional'] = -1 / nK
+            # Winners in this cluster
+            winners = R_curr[cluster_mask & (R_curr['trade'] == 1)]
+            x_values = winners['deviation']
+            sum_x = x_values.sum()
+            if sum_x != 0:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == 1), 'notional'] = -x_values / sum_x
+            else:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == 1), 'notional'] = 0
 
-      # Assign notional for -1 trades in the current cluster, handling division by zero
-      if mK > 0:
-          R_curr.loc[(R_curr['cluster'] == cluster_id) & (R_curr['trade'] == -1), 'notional'] = 1 / mK
+            # Losers in this cluster
+            losers = R_curr[cluster_mask & (R_curr['trade'] == -1)]
+            y_values = -losers['deviation']
+            sum_y = y_values.sum()
+            if sum_y != 0:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == -1), 'notional'] = y_values / sum_y
+            else:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == -1), 'notional'] = 0
+            R_curr.loc[cluster_mask & (R_curr['trade'] == 0), 'notional'] = 0
+    
+    elif weighting_scheme == 'exponential':
+        # Apply exponential weighting within each cluster
+        for cluster_id in R_curr['cluster'].unique():
+            cluster_mask = R_curr['cluster'] == cluster_id
 
-  # Display the updated DataFrame
-  return R_curr
+            # Winners in this cluster
+            winners = R_curr[cluster_mask & (R_curr['trade'] == 1)]
+            x_values = winners['deviation']
+            exp_x = np.exp(x_values)
+            sum_exp_x = exp_x.sum()
+            if sum_exp_x != 0:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == 1), 'notional'] = -exp_x / sum_exp_x
+            else:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == 1), 'notional'] = 0
+
+            # Losers in this cluster
+            losers = R_curr[cluster_mask & (R_curr['trade'] == -1)]
+            y_values = -losers['deviation']
+            exp_y = np.exp(y_values)
+            sum_exp_y = exp_y.sum()
+            if sum_exp_y != 0:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == -1), 'notional'] = exp_y / sum_exp_y
+            else:
+                R_curr.loc[cluster_mask & (R_curr['trade'] == -1), 'notional'] = 0
+
+            R_curr.loc[cluster_mask & (R_curr['trade'] == 0), 'notional'] = 0
+    
+    elif weighting_scheme == 'threshold':
+        pass
+
+    return R_curr
 
 def execute_trading_strategy(win_threshold: float,
                             lookback_window = 60,
@@ -101,7 +153,8 @@ def execute_trading_strategy(win_threshold: float,
                             w = 5,
                             eligible_dates = None,
                             cl_med = 'SPONGE',
-                            num_med = 'var'):
+                            num_med = 'var',
+                            weighting_scheme = 'uniform'):
     # record the total number of days
     num_dates = len(eligible_dates)
     # first trading day
@@ -136,7 +189,7 @@ def execute_trading_strategy(win_threshold: float,
         market_cov = market_curr[: lookback_window]
         # clusterize the stocks
         R_cov = clusterize(cl_med, num_med, R_cov, market_cov)
-        R_cov = assign_stock_weights(identify_stocks(R_cov))
+        R_cov = assign_stock_weights(identify_stocks(R_cov), weighting_scheme = weighting_scheme)
         # calculate PnLs for the lookforward window
         bet_size = R_cov['notional'].to_numpy()
         lookback = -1 * lookforward_window
