@@ -89,7 +89,7 @@ def get_num_of_clusters(corr, thr):
         if running / sum_of_eigs >= thr:
             return i+1
 
-def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clustering_window=100, default_cluster_num=15):
+def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clustering_window=20, default_cluster_num=40):
     R = R_cov.copy()
     market = market_cov.copy()
 
@@ -106,7 +106,7 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, clust
         # 'mar-pa' means we use the marchenko-pastur distribution
         if num_med == 'var' or num_med == 'mar-pa':
             RRT_num_clusters = residual_returns_matrix[-clustering_window :, :]
-        cov = 1/(clustering_window) * (RRT_num_clusters.T @ RRT_num_clusters)
+            cov = 1/(clustering_window) * (RRT_num_clusters.T @ RRT_num_clusters)
         if num_med == 'var':
             k = get_num_of_clusters(cov, 0.9)
         if num_med == 'mar-pa':

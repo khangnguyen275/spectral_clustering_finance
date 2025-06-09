@@ -4,7 +4,7 @@ import numpy as np
 from utils.cluster import clusterize
 from utils.returns import get_sliding_window_data
 
-def identify_stocks(R_curr: pd.DataFrame):
+def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5):
     R_curr = R_curr.copy()
 
     # On each day, calculate the deviation from the mean of the cluster for each stock
@@ -14,12 +14,21 @@ def identify_stocks(R_curr: pd.DataFrame):
         .groupby('cluster')[numeric_cols]
         .transform(lambda col: col - col.mean())
     )
-
+    # Drop the non-numeric columns, then sum all deviations within the specified window
+    # Drop the non-numeric columns, then sum all deviations within the specified window
+    numeric_cols = R_curr.columns.difference(['ticker', 'cluster'])
+    # Select the columns in the window: from -lookforward_window-w to -lookforward_window (exclusive)
+    window_start = -lookforward_window - w
+    window_end = -lookforward_window
+    window_cols = numeric_cols[window_start:window_end]
+    R_curr['deviation'] = R_curr[window_cols].sum(axis=1)
     # Drop the non-numeric columns, then sum all deviations within the sliding window
-    R_curr['deviation'] = R_curr.drop(columns=['ticker', 'cluster']).sum(axis=1)
+    #R_curr['deviation'] = R_curr.drop(columns=['ticker', 'cluster']).sum(axis=1)
+    
+    
 
     # Identify winners and losers based on the threshold value p
-    threshold = 0
+    threshold = 0.001
 
     # Start with zeros
     R_curr['trade'] = 0
@@ -31,6 +40,36 @@ def identify_stocks(R_curr: pd.DataFrame):
     R_curr.loc[R_curr['deviation'] < threshold, 'trade'] = -1
 
     return R_curr
+
+
+# def identify_stocks(R_curr: pd.DataFrame):
+#     R_curr = R_curr.copy()
+
+#     # On each day, calculate the deviation from the mean of the cluster for each stock
+#     numeric_cols = R_curr.columns.difference(['ticker', 'cluster'])
+#     R_curr[numeric_cols] = (
+#         R_curr
+#         .groupby('cluster')[numeric_cols]
+#         .transform(lambda col: col - col.mean())
+#     )
+
+#     # Drop the non-numeric columns, then sum all deviations within the sliding window
+#     R_curr['deviation'] = R_curr.drop(columns=['ticker', 'cluster']).sum(axis=1)
+
+#     # Identify winners and losers based on the threshold value p
+#     threshold = 0
+
+#     # Start with zeros
+#     R_curr['trade'] = 0
+
+#     # Set +1 where deviation exceeds threshold signifying winners
+#     R_curr.loc[R_curr['deviation'] > threshold, 'trade'] = 1
+
+#     # Set -1 where deviation is below threshold signifying losers
+#     R_curr.loc[R_curr['deviation'] < threshold, 'trade'] = -1
+
+#     return R_curr
+
 
 def assign_stock_weights(R_curr: pd.DataFrame):
 
