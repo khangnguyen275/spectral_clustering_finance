@@ -19,7 +19,7 @@ cluster_combinations = [
     # (num_dates, num_med, num_clusters, win_threshold, cluster_selection_flag, num_trading_clusters, weight_type, winsor_param)
     #("-1", "self", "40", "0.001", True,  "5",  "uniform", "0"),
     #("-1", "self", "40", "0.001", True,  "10", "uniform", "0"),
-    ("-1", "self", "40", "0.001", True,  "20", "uniform", "0"),
+    #("-1", "self", "40", "0.001", True,  "20", "uniform", "0"),
     ("-1", "self", "40", "0.001", True,  "30", "uniform", "0")
     #("-1", "self", "5",  "0.001", False, "5",  "uniform", "0"),
     #("-1", "self", "10", "0.001", False, "10", "uniform", "0"),

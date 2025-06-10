@@ -85,7 +85,7 @@ def discard_bottom_clusters(corr_matrix, cluster_vector, num_trading_clusters=40
         cluster_terms.append((cluster_idx, term))
     # Sort clusters by term (ascending, lower is worse)
     sorted_clusters = sorted([ct for ct in cluster_terms if not np.isnan(ct[1])], key=lambda x: x[1])
-    # Discard bottom 1/4 clusters
+    # Discard bottom clusters
     n_discard = len(unique_clusters) - num_trading_clusters
     selected_clusters = set([cl for cl, _ in sorted_clusters[n_discard:]])
     # Create mask for stocks in selected clusters
