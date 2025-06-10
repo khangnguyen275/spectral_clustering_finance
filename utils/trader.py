@@ -258,7 +258,6 @@ def execute_trading_strategy(win_threshold: float,
 
         if np.max(Cumpnl) > win_threshold:
             success += 1
-            print("success!")
             index = np.argmax(Cumpnl > win_threshold)
             PnLs = PnLs[:index+1]
 
