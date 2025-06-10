@@ -106,7 +106,6 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winso
 
     # choose which clusterization method to use
     if cl_med == 'SPONGE':
-
         # determine the number of clusters for the SPONGE algorithm
         # 'var' means we use percent of explained variance
         # 'mar-pa' means we use the marchenko-pastur distribution
@@ -135,6 +134,13 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winso
         # 'self' means we pass in # of clusters ourselves
         if num_med == 'self':
             k = default_cluster_num
+
+        # Defensive check: skip clustering if matrix is empty or k is invalid
+        if residual_returns_matrix.shape[1] == 0 or k is None or k < 1 or k > residual_returns_matrix.shape[1]:
+            print(f"Skipping clustering: shape={residual_returns_matrix.shape}, k={k}")
+            R['cluster'] = -1  # or some default/fallback
+            return R
+
         # split the correlation matrix into positive and negative parts
         G_plus = np.maximum(corr, 0)
         G_minus = np.maximum(-corr, 0)

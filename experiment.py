@@ -34,6 +34,7 @@ parser.add_argument('--winsorize_raw', action='store_true', help='Enable windsor
 parser.add_argument('--winsorize_res', action='store_true', help='Enable windsorization for the res returns (default: False)')
 parser.add_argument('--winsor_param', type=float, default=0.05, help='Winsorization parameter (default: 0.05)')
 parser.add_argument('--num_dates', type=int, default= -1, help='Number of eligible dates to use (default: None)')
+parser.add_argument('--num_med', type=str, choices=['self', 'var'], default='self', help="Number of medoids to use: 'self' or 'var' (default: 'self')")
 args = parser.parse_args()
 
 cluster_selection = args.cluster_selection
@@ -44,8 +45,8 @@ winsor_param = args.winsor_param
 num_dates = args.num_dates
 if num_dates == -1:
     num_dates = None  # Use all dates if -1 is specified
-
-print(f"cluster_selection: {cluster_selection}, weight_type: {weight_type}, windsorize_raw: {winsorize_raw}, windsorize_res: {winsorize_res}, winsor_param: {winsor_param}")
+num_med = args.num_med
+print(f"cluster_selection: {cluster_selection}, weight_type: {weight_type}, windsorize_raw: {winsorize_raw}, windsorize_res: {winsorize_res}, winsor_param: {winsor_param}, num_dates: {num_dates}, num_med: {num_med}")
 
 eligible_dates_txt_output = path + '/eligible_dates.txt'
 eligible_dates = get_eligible_date_paths_from_file(eligible_dates_txt_output)
@@ -59,7 +60,8 @@ daily_PnL, dates, success_rate = execute_trading_strategy(win_threshold=0.001,
                                      w=5,
                                      eligible_dates=eligible_dates,
                                      cluster_selection=cluster_selection,
-                                     num_dates=num_dates)
+                                     num_dates=num_dates,
+                                     num_med=num_med)
                                     #  weighting_scheme=weight_type,
                                     #  winsorize_raw=winsorize_raw,
                                     #  winsorize_res=winsorize_res,
@@ -78,7 +80,7 @@ except NameError:
     script_dir = os.getcwd()
 results_dir = os.path.join(script_dir, 'results')
 os.makedirs(results_dir, exist_ok=True)
-run_setting = str(cluster_selection) + "_" + weight_type + "_" + str(winsorize_raw) + "_" + str(winsorize_res) + "_" + str(winsor_param)
+run_setting = str(cluster_selection) + "_" + weight_type + "_" + str(winsorize_raw) + "_" + str(winsorize_res) + "_" + str(winsor_param) + "_" + str(num_dates) + "_" + str(num_med)
 
 plot_path = os.path.join(results_dir, f'{run_setting}_cumulative_pnl.jpg')
 PnL_path = os.path.join(results_dir, f'{run_setting}_daily_PnL')
