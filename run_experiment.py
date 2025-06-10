@@ -1,10 +1,11 @@
 import subprocess
 import itertools
-
-weight_types = ["uniform", "exponential", "linear"]
+import numpy as np
+np.set_printoptions(precision=8, suppress=False)
+weight_types = ["uniform"]
 # winsor_params = ["0.1", "0.2"]
 winsor_params = ["0"]
-num_dates_options = ["100", "200"]
+num_dates_options = ["1000"]
 cluster_selection_options = [True, False]
 winsorize_raw_options = [False]
 winsorize_res_options = [False]

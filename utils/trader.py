@@ -4,6 +4,7 @@ import numpy as np
 from utils.cluster import *
 from utils.returns import *
 from utils.helper import *
+np.set_printoptions(precision=8, suppress=False)
 
 def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, threshold = 0):
     R_curr = R_curr.copy()
@@ -202,7 +203,7 @@ def execute_trading_strategy(win_threshold: float,
     # update_portfolio = True
 
     # while current_date + lookforward_window < num_dates:
-    while current_date + lookforward_window < 200:
+    while current_date + lookforward_window < num_dates:
         num_period += 1
         start_date = current_date - lookback_window
         # size of R_curr: #stocks x (1 ticker + 63 days)
@@ -257,6 +258,7 @@ def execute_trading_strategy(win_threshold: float,
 
         if np.max(Cumpnl) > win_threshold:
             success += 1
+            print("success!")
             index = np.argmax(Cumpnl > win_threshold)
             PnLs = PnLs[:index+1]
 
@@ -274,5 +276,6 @@ def execute_trading_strategy(win_threshold: float,
                 curr_date_str.append(R_curr.columns[-lookforward_window+i])
         print(f"Day {current_date+1}: PnL = {PnLs}")
     date = pd.to_datetime(curr_date_str, format='%Y%m%d')
+    print(f"Success rate: {float(success) / float(num_period):.2%}")
 
     return daily_PnL, date, float(success) / float(num_period)

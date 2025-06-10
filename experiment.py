@@ -4,7 +4,7 @@ import argparse
 import re
 import matplotlib.pyplot as plt
 from utils.metrics import *
-
+np.set_printoptions(precision=8, suppress=False)
 possible_paths = [
         '/Users/khang/Desktop/math285j_project/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
         '/Users/lunjizhu/Desktop/MATH 285J Project Workspace/spectral_clustering_finance/data',
@@ -51,7 +51,7 @@ eligible_dates = get_eligible_date_paths_from_file(eligible_dates_txt_output)
 import time
 
 start_time = time.time()
-daily_PnL, dates, success_rate = execute_trading_strategy(win_threshold=0.1,
+daily_PnL, dates, success_rate = execute_trading_strategy(win_threshold=0.001,
                                      lookback_window=60,
                                      lookforward_window=3,
                                      w=5,
@@ -86,9 +86,9 @@ success_rate_path = os.path.join(results_dir, f'{run_setting}_success_rate')
 
 
 np.savetxt(PnL_path + '.txt', daily_PnL)
-np.savetxt(Sharpe_path + '.txt', sharpe_ratio)
+np.savetxt(Sharpe_path + '.txt', [sharpe_ratio])
 np.savetxt(date_path + '.txt', dates, fmt='%s')
-np.savetxt(success_rate_path + '.txt', success_rate)
+np.savetxt(success_rate_path + '.txt', np.array([success_rate]))
 
 plt.figure(figsize=(14, 7))
 plt.plot(dates, cumulative_pnl)
