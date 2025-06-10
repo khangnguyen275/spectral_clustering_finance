@@ -4,6 +4,7 @@ import argparse
 import re
 import matplotlib.pyplot as plt
 from utils.metrics import *
+import csv
 np.set_printoptions(precision=8, suppress=False)
 possible_paths = [
         '/Users/khang/Desktop/math285j_project/data/drive-download-20250531T145738Z-1-001/CRSP Data Set',
@@ -96,33 +97,42 @@ except NameError:
     script_dir = os.getcwd()
 results_dir = os.path.join(script_dir, 'results')
 os.makedirs(results_dir, exist_ok=True)
-run_setting = str(cluster_selection) + "_" + weight_type + "_" + str(winsorize_raw) + "_" + str(winsorize_res) + "_" + str(winsor_param) + "_" + str(num_dates) + "_" + str(num_med)
 
-plot_path = os.path.join(results_dir, f'{run_setting}_cumulative_pnl.jpg')
-PnL_path = os.path.join(results_dir, f'{run_setting}_daily_PnL')
-Sharpe_path = os.path.join(results_dir, f'{run_setting}_Sharpe_Ratio')
-date_path = os.path.join(results_dir, f'{run_setting}_date')
-success_rate_path = os.path.join(results_dir, f'{run_setting}_success_rate')
-
-
-np.savetxt(PnL_path + '.txt', daily_PnL)
-np.savetxt(Sharpe_path + '.txt', [sharpe_ratio])
-np.savetxt(date_path + '.txt', dates, fmt='%s')
-np.savetxt(success_rate_path + '.txt', np.array([success_rate]))
-
-plt.figure(figsize=(14, 7))
-plt.plot(dates, cumulative_pnl)
-plt.title('Cumulative Daily PnL')
-plt.xlabel('Date')
-plt.ylabel('Cumulative PnL')
-plt.xticks(rotation=45, fontsize=8)
-plt.grid(True)
-# Show only a subset of x-ticks for readability
-if len(dates) > 20:
-    step = max(1, len(dates) // 20)
-    plt.xticks(dates[::step])
-plt.tight_layout()
-plt.savefig(plot_path)
-plt.close()
-print(f"Plot saved to {plot_path}")
+csv_path = os.path.join(results_dir, 'result.csv')
+# Append daily_PnL as a new row, with dates as header only if file is empty
+write_header = not os.path.exists(csv_path) or os.stat(csv_path).st_size == 0
+with open(csv_path, mode='a', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    param_values = [
+        num_dates,
+        num_med,
+        num_clusters,
+        win_threshold,
+        cluster_selection,
+        num_trading_clusters,
+        weight_type,
+        winsorize_raw,
+        winsorize_res,
+        winsor_param,
+        sharpe_ratio,
+        success_rate
+    ]
+    if write_header:
+        header = [
+            'num_dates',
+            'num_med',
+            'num_clusters',
+            'win_threshold',
+            'cluster_selection',
+            'num_trading_clusters',
+            'weight_type',
+            'winsorize_raw',
+            'winsorize_res',
+            'winsor_param',
+            'sharpe_ratio',
+            'success_rate'
+        ] + [str(date) for date in dates]
+        writer.writerow(header)
+    writer.writerow(param_values + list(daily_PnL))
+print(f"PnL values appended to {csv_path} (dates as columns, each run as a new row)")
 

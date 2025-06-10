@@ -86,17 +86,17 @@ def discard_bottom_clusters(corr_matrix, cluster_vector, num_trading_clusters=40
     # Sort clusters by term (ascending, lower is worse)
     sorted_clusters = sorted([ct for ct in cluster_terms if not np.isnan(ct[1])], key=lambda x: x[1])
     # Discard bottom 1/4 clusters
-    n_discard = unique_clusters - num_trading_clusters
+    n_discard = len(unique_clusters) - num_trading_clusters
     selected_clusters = set([cl for cl, _ in sorted_clusters[n_discard:]])
     # Create mask for stocks in selected clusters
     selected_mask = np.array([cl in selected_clusters for cl in cluster_vector])
     return selected_mask, selected_clusters
 
-def assign_stock_weights(R_curr: pd.DataFrame, weighting_scheme='uniform'):
+def assign_stock_weights(R_curr: pd.DataFrame, weight_type='uniform'):
     R_curr = R_curr.copy()
     R_curr['notional'] = 0.0  # Initialize the 'notional' column with zeros
     
-    if weighting_scheme == 'uniform':
+    if weight_type == 'uniform':
         # Calculate nK and mK for each cluster
         cluster_counts = R_curr.groupby('cluster')['trade'].value_counts().unstack(fill_value=0)
 
@@ -116,7 +116,7 @@ def assign_stock_weights(R_curr: pd.DataFrame, weighting_scheme='uniform'):
             if mK > 0:
                 R_curr.loc[(R_curr['cluster'] == cluster_id) & (R_curr['trade'] == -1), 'notional'] = 1 / mK
 
-    elif weighting_scheme == 'linear':
+    elif weight_type == 'linear':
         # Apply linear weighting within each cluster
         for cluster_id in R_curr['cluster'].unique():
             cluster_mask = R_curr['cluster'] == cluster_id
@@ -140,7 +140,7 @@ def assign_stock_weights(R_curr: pd.DataFrame, weighting_scheme='uniform'):
                 R_curr.loc[cluster_mask & (R_curr['trade'] == -1), 'notional'] = 0
             R_curr.loc[cluster_mask & (R_curr['trade'] == 0), 'notional'] = 0
     
-    elif weighting_scheme == 'exponential':
+    elif weight_type == 'exponential':
         # Apply exponential weighting within each cluster
         for cluster_id in R_curr['cluster'].unique():
             cluster_mask = R_curr['cluster'] == cluster_id
@@ -167,7 +167,7 @@ def assign_stock_weights(R_curr: pd.DataFrame, weighting_scheme='uniform'):
 
             R_curr.loc[cluster_mask & (R_curr['trade'] == 0), 'notional'] = 0
     
-    elif weighting_scheme == 'threshold':
+    elif weight_type == 'threshold':
         pass
 
     return R_curr
@@ -182,7 +182,7 @@ def execute_trading_strategy(win_threshold: float,
                             winsorize_raw = False,
                             winsorize_res = False,
                             winsor_param = 0.05,
-                            weighting_scheme = 'uniform',
+                            weight_type = 'uniform',
                             cluster_selection = False,
                             num_dates = None,
                             num_clusters = 40,
@@ -245,7 +245,7 @@ def execute_trading_strategy(win_threshold: float,
             
             
         else:
-            R_cov = assign_stock_weights(identify_stocks(R_cov), weighting_scheme = weighting_scheme)
+            R_cov = assign_stock_weights(identify_stocks(R_cov), weight_type = weight_type)
             # calculate PnLs for the lookforward window
             bet_size = R_cov['notional'].to_numpy()
             lookback = -1 * lookforward_window

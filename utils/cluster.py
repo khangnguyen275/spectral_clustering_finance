@@ -90,7 +90,7 @@ def get_num_of_clusters(corr, thr):
         if running / sum_of_eigs >= thr:
             return i+1
 
-def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winsorize_res, winsor_param, clustering_window=20, default_cluster_num=40):
+def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winsorize_res, winsor_param, clustering_window=20, num_clusters=40):
     R = R_cov.copy()
     market = market_cov.copy()
 
@@ -133,7 +133,7 @@ def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winso
             print(k)
         # 'self' means we pass in # of clusters ourselves
         if num_med == 'self':
-            k = default_cluster_num
+            k = num_clusters
 
         # Defensive check: skip clustering if matrix is empty or k is invalid
         if residual_returns_matrix.shape[1] == 0 or k is None or k < 1 or k > residual_returns_matrix.shape[1]:
