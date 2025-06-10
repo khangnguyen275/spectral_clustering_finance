@@ -67,7 +67,7 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, thresho
 
 #     return R_curr
 
-def discard_bottom_quarter_clusters(corr_matrix, cluster_vector):
+def discard_bottom_clusters(corr_matrix, cluster_vector, num_trading_clusters=40):
     """
     Discards the bottom 10 clusters with the lowest correlation_object_function term values.
     Returns a mask (boolean array) indicating which stocks belong to the selected clusters.
@@ -86,7 +86,7 @@ def discard_bottom_quarter_clusters(corr_matrix, cluster_vector):
     # Sort clusters by term (ascending, lower is worse)
     sorted_clusters = sorted([ct for ct in cluster_terms if not np.isnan(ct[1])], key=lambda x: x[1])
     # Discard bottom 1/4 clusters
-    n_discard = len(sorted_clusters) // 4
+    n_discard = unique_clusters - num_trading_clusters
     selected_clusters = set([cl for cl, _ in sorted_clusters[n_discard:]])
     # Create mask for stocks in selected clusters
     selected_mask = np.array([cl in selected_clusters for cl in cluster_vector])
@@ -184,7 +184,9 @@ def execute_trading_strategy(win_threshold: float,
                             winsor_param = 0.05,
                             weighting_scheme = 'uniform',
                             cluster_selection = False,
-                            num_dates = None):
+                            num_dates = None,
+                            num_clusters = 40,
+                            num_trading_clusters = 40):
     # record the total number of days
     if num_dates is None:
         num_dates = len(eligible_dates)
@@ -229,10 +231,10 @@ def execute_trading_strategy(win_threshold: float,
         residual_returns_matrix = residual_returns_matrix.astype(float).T
         corr = compute_correlation_matrix(residual_returns_matrix)
         
-        R_cov = clusterize(cl_med, num_med, R_cov, market_cov, winsorize_res, winsor_param)
+        R_cov = clusterize(cl_med, num_med, R_cov, market_cov, winsorize_res, winsor_param, num_clusters=num_clusters)
         
         if cluster_selection:
-            selected_mask, selected_clusters = discard_bottom_quarter_clusters(corr, R_cov['cluster'].values)
+            selected_mask, selected_clusters = discard_bottom_clusters(corr, R_cov['cluster'].values, num_trading_clusters=num_trading_clusters)
             R_cov = R_cov[selected_mask].reset_index(drop=True)
             R_cov = assign_stock_weights(identify_stocks(R_cov))
             # calculate PnLs for the lookforward window
