@@ -35,6 +35,7 @@ parser.add_argument('--winsorize_res', action='store_true', help='Enable windsor
 parser.add_argument('--winsor_param', type=float, default=0.05, help='Winsorization parameter (default: 0.05)')
 parser.add_argument('--num_dates', type=int, default= -1, help='Number of eligible dates to use (default: None)')
 parser.add_argument('--num_med', type=str, choices=['self', 'var'], default='self', help="Number of medoids to use: 'self' or 'var' (default: 'self')")
+parser.add_argument('--win_threshold', type=float, default=0.001, help='Win threshold (non-negative float, default: 0.001)')
 args = parser.parse_args()
 
 cluster_selection = args.cluster_selection
@@ -43,6 +44,8 @@ winsorize_raw = args.winsorize_raw
 winsorize_res = args.winsorize_res
 winsor_param = args.winsor_param
 num_dates = args.num_dates
+win_threshold = args.win_threshold
+
 if num_dates == -1:
     num_dates = None  # Use all dates if -1 is specified
 num_med = args.num_med
@@ -54,7 +57,7 @@ eligible_dates = get_eligible_date_paths_from_file(eligible_dates_txt_output)
 import time
 
 start_time = time.time()
-daily_PnL, dates, success_rate = execute_trading_strategy(win_threshold=0.001,
+daily_PnL, dates, success_rate = execute_trading_strategy(win_threshold=win_threshold,
                                      lookback_window=60,
                                      lookforward_window=3,
                                      w=5,
