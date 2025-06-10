@@ -6,7 +6,7 @@ np.set_printoptions(precision=8, suppress=False)
 
 baseline_cmd = [
     "python", "main_experiment.py",
-    "--num_dates", "80",  # Use all dates
+    "--num_dates", "-1",  # Use all dates
     "--num_med", "self", 
     "--num_clusters", "40",
     "--win_threshold", "0.001",
@@ -21,7 +21,7 @@ weighting_cmds = []
 for method in weighting_methods:
     cmd = [
         "python", "main_experiment.py",
-        "--num_dates", "100",  # Use all dates
+        "--num_dates", "-1",  # Use all dates
         "--num_med", "self", 
         "--num_clusters", "40",
         "--win_threshold", "0.001",
