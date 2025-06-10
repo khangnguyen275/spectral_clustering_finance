@@ -33,7 +33,7 @@ parser.add_argument('--weight_type', choices=['uniform', 'linear', 'exponential'
 parser.add_argument('--winsorize_raw', action='store_true', help='Enable windsorization for the raw returns (default: False)')
 parser.add_argument('--winsorize_res', action='store_true', help='Enable windsorization for the res returns (default: False)')
 parser.add_argument('--winsor_param', type=float, default=0.05, help='Winsorization parameter (default: 0.05)')
-parser.add_argument('--num_dates', type=int, default=None, help='Number of eligible dates to use (default: None)')
+parser.add_argument('--num_dates', type=int, default= -1, help='Number of eligible dates to use (default: None)')
 args = parser.parse_args()
 
 cluster_selection = args.cluster_selection
@@ -42,6 +42,8 @@ winsorize_raw = args.winsorize_raw
 winsorize_res = args.winsorize_res
 winsor_param = args.winsor_param
 num_dates = args.num_dates
+if num_dates == -1:
+    num_dates = None  # Use all dates if -1 is specified
 
 print(f"cluster_selection: {cluster_selection}, weight_type: {weight_type}, windsorize_raw: {winsorize_raw}, windsorize_res: {winsorize_res}, winsor_param: {winsor_param}")
 

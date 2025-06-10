@@ -4,7 +4,7 @@ import itertools
 weight_types = ["uniform", "exponential", "linear"]
 # winsor_params = ["0.1", "0.2"]
 winsor_params = ["0"]
-num_dates_options = ["100", "200"]
+num_dates_options = ["100", "200", "-1"]  # -1 means all dates
 cluster_selection_options = [True, False]
 winsorize_raw_options = [False]
 winsorize_res_options = [False]
