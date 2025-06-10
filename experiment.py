@@ -28,13 +28,21 @@ from utils.trader import execute_trading_strategy
 from utils.helper import *
 
 parser = argparse.ArgumentParser(description="Spectral Clustering Finance Experiment")
+# general parameters
+parser.add_argument('--num_dates', type=int, default= -1, help='Number of eligible dates to use (default: -1, which means all dates)')
+parser.add_argument('--num_med', type=str, choices=['self', 'var'], default='self', help="Number of medoids to use: 'self' or 'var' (default: 'self')")
+parser.add_argument('--num_clusters', type=int, default=40, help='Number of clusters to use for clustering (default: 40)')
+# cluster selection parameters
 parser.add_argument('--cluster_selection', action='store_true', help='Enable cluster selection (default: False)')
+parser.add_argument('--num_trading_clusters', type=int, default=40, help='Number of trading clusters to use (default: 40)')
+# weighting parameters
 parser.add_argument('--weight_type', choices=['uniform', 'linear', 'exponential'], default='uniform', help='Type of weighting to use (default: uniform)')
+# winsorization parameters
 parser.add_argument('--winsorize_raw', action='store_true', help='Enable windsorization for the raw returns (default: False)')
 parser.add_argument('--winsorize_res', action='store_true', help='Enable windsorization for the res returns (default: False)')
 parser.add_argument('--winsor_param', type=float, default=0.05, help='Winsorization parameter (default: 0.05)')
-parser.add_argument('--num_dates', type=int, default= -1, help='Number of eligible dates to use (default: None)')
-parser.add_argument('--num_med', type=str, choices=['self', 'var'], default='self', help="Number of medoids to use: 'self' or 'var' (default: 'self')")
+
+
 parser.add_argument('--win_threshold', type=float, default=0.001, help='Win threshold (non-negative float, default: 0.001)')
 args = parser.parse_args()
 
