@@ -54,7 +54,7 @@ math285j_project/
 
 ### Data Preprocessing
 Before running the experiments, download the data from
- [this Dropbox folder](https://www.dropbox.com/scl/fo/bx9jv5x2fnu9j02i5j77a/AGljwCnU10aplUA6BZ3AwrU?rlkey=7jeselv0gnki38q4dvrzbhbsc&e=1&st=qragjz2p&dl=0) and save them to the data folder. Then preprocess the CRSP data by executing:
+ [this Dropbox folder](https://www.dropbox.com/scl/fo/bx9jv5x2fnu9j02i5j77a/AGljwCnU10aplUA6BZ3AwrU?rlkey=7jeselv0gnki38q4dvrzbhbsc&e=1&st=qragjz2p&dl=0) and save the yearly data to the `data` folder. Then preprocess the CRSP data by executing:
 
 ```bash
 python preprocessing.py
