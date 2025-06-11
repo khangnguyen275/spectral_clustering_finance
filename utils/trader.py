@@ -7,6 +7,26 @@ from utils.helper import *
 np.set_printoptions(precision=8, suppress=False)
 
 def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, threshold = 0):
+    """
+    Identifies stocks as potential 'winners' or 'losers' based on their deviation from the mean return of their cluster over a specified historical window.
+    Parameters
+    ----------
+    R_curr : pd.DataFrame
+        DataFrame containing stock returns and cluster assignments. Must include columns 'ticker', 'cluster', and time-series return columns.
+    lookforward_window : int, optional
+        The number of periods to look forward from the end of the window (default is 3).
+    w : int, optional
+        The width of the historical window (number of periods) to calculate the deviation (default is 5).
+    threshold : float, optional
+        The threshold for classifying a stock as a 'winner' or 'loser' based on its deviation (default is 0).
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with additional columns:
+            - 'deviation': The sum of deviations from the cluster mean over the specified window.
+            - 'trade': Trade signal (+1 for winner, -1 for loser, 0 for neutral).
+    """
+    
     R_curr = R_curr.copy()
 
     # On each day, calculate the deviation from the mean of the cluster for each stock
@@ -38,39 +58,20 @@ def identify_stocks(R_curr: pd.DataFrame, lookforward_window = 3, w = 5, thresho
 
     return R_curr
 
-
-# def identify_stocks(R_curr: pd.DataFrame):
-#     R_curr = R_curr.copy()
-
-#     # On each day, calculate the deviation from the mean of the cluster for each stock
-#     numeric_cols = R_curr.columns.difference(['ticker', 'cluster'])
-#     R_curr[numeric_cols] = (
-#         R_curr
-#         .groupby('cluster')[numeric_cols]
-#         .transform(lambda col: col - col.mean())
-#     )
-
-#     # Drop the non-numeric columns, then sum all deviations within the sliding window
-#     R_curr['deviation'] = R_curr.drop(columns=['ticker', 'cluster']).sum(axis=1)
-
-#     # Identify winners and losers based on the threshold value p
-#     threshold = 0
-
-#     # Start with zeros
-#     R_curr['trade'] = 0
-
-#     # Set +1 where deviation exceeds threshold signifying winners
-#     R_curr.loc[R_curr['deviation'] > threshold, 'trade'] = 1
-
-#     # Set -1 where deviation is below threshold signifying losers
-#     R_curr.loc[R_curr['deviation'] < threshold, 'trade'] = -1
-
-#     return R_curr
-
 def discard_bottom_clusters(corr_matrix, cluster_vector, num_trading_clusters=40):
     """
-    Discards the bottom 10 clusters with the lowest correlation_object_function term values.
-    Returns a mask (boolean array) indicating which stocks belong to the selected clusters.
+    Discards clusters with the lowest average intra-cluster correlation and selects the top clusters for trading.
+
+    Given a correlation matrix and a cluster assignment vector, this function computes a correlation-based score for each cluster, ranks the clusters, and discards those with the lowest scores. It returns a boolean mask indicating which elements belong to the selected clusters, as well as the set of selected cluster indices.
+
+    Args:
+        corr_matrix (np.ndarray): Square correlation matrix of shape (n_stocks, n_stocks).
+        cluster_vector (np.ndarray): Array of shape (n_stocks,) assigning each stock to a cluster.
+        num_trading_clusters (int, optional): Number of top clusters to retain for trading. Defaults to 40.
+
+    Returns:
+        selected_mask (np.ndarray): Boolean array of shape (n_stocks,) where True indicates the stock belongs to a selected cluster.
+        selected_clusters (set): Set of cluster indices that were selected.
     """
     unique_clusters = np.unique(cluster_vector)
     # Compute the term for each cluster
@@ -93,6 +94,32 @@ def discard_bottom_clusters(corr_matrix, cluster_vector, num_trading_clusters=40
     return selected_mask, selected_clusters
 
 def assign_stock_weights(R_curr: pd.DataFrame, weight_type='uniform'):
+    """
+    Assigns notional weights to stocks based on their cluster and trade signal.
+    Parameters
+    ----------
+    R_curr : pd.DataFrame
+        DataFrame containing at least the following columns:
+            - 'cluster': Cluster assignment for each stock.
+            - 'trade': Trade signal for each stock (1 for buy, -1 for sell, 0 for no trade).
+            - 'deviation': Deviation value used for linear and exponential weighting.
+    weight_type : str, default='uniform'
+        The method used to assign weights. Supported types:
+            - 'uniform': Assigns equal weights within each cluster for buy/sell trades.
+            - 'linear': Assigns weights linearly proportional to the deviation within each cluster.
+            - 'exponential': Assigns weights exponentially proportional to the deviation within each cluster.
+            - 'threshold': Placeholder for future implementation.
+    Returns
+    -------
+    pd.DataFrame
+        A copy of the input DataFrame with an additional 'notional' column containing the assigned weights.
+    Notes
+    -----
+    - For 'uniform', buy trades receive negative weights and sell trades receive positive weights, normalized within each cluster.
+    - For 'linear' and 'exponential', weights are normalized within each cluster and depend on the 'deviation' column.
+    - Trades with signal 0 always receive a notional of 0.
+    """
+    
     R_curr = R_curr.copy()
     R_curr['notional'] = 0.0  # Initialize the 'notional' column with zeros
     
@@ -173,20 +200,53 @@ def assign_stock_weights(R_curr: pd.DataFrame, weight_type='uniform'):
     return R_curr
 
 def execute_trading_strategy(win_threshold: float,
-                            lookback_window = 60,
-                            lookforward_window = 3,
-                            w = 5,
-                            eligible_dates = None,
-                            cl_med = 'SPONGE',
-                            num_med = 'self',
-                            winsorize_raw = False,
-                            winsorize_res = False,
-                            winsor_param = 0.05,
-                            weight_type = 'uniform',
-                            cluster_selection = False,
-                            num_dates = None,
-                            num_clusters = 40,
-                            num_trading_clusters = 40):
+                            lookback_window=60,
+                            lookforward_window=3,
+                            w=5,
+                            eligible_dates=None,
+                            cl_med='SPONGE',
+                            num_med='self',
+                            winsorize_raw=False,
+                            winsorize_res=False,
+                            winsor_param=0.05,
+                            weight_type='uniform',
+                            cluster_selection=False,
+                            num_dates=None,
+                            num_clusters=40,
+                            num_trading_clusters=40
+                            ):
+    """
+    Executes a trading strategy based on historical returns, clustering, and risk management.
+    This function simulates a trading strategy over a series of dates, using a rolling window approach.
+    It clusters stocks, optionally selects clusters, assigns portfolio weights, and computes profit and loss (PnL)
+    over a lookforward window. The strategy can terminate early in a period if a cumulative PnL threshold is reached.
+    Args:
+        win_threshold (float): The cumulative PnL threshold to trigger early exit from a trading period.
+        lookback_window (int, optional): Number of days to use for the lookback window (default: 60).
+        lookforward_window (int, optional): Number of days to use for the lookforward window (default: 3).
+        w (int, optional): Window size parameter for internal calculations (default: 5).
+        eligible_dates (list or array-like, optional): List of eligible trading dates.
+        cl_med (str, optional): Clustering method to use (default: 'SPONGE').
+        num_med (str, optional): Method for determining number of clusters (default: 'self').
+        winsorize_raw (bool, optional): Whether to winsorize raw returns data (default: False).
+        winsorize_res (bool, optional): Whether to winsorize residual returns (default: False).
+        winsor_param (float, optional): Winsorization parameter (default: 0.05).
+        weight_type (str, optional): Type of weighting scheme for portfolio ('uniform', etc.) (default: 'uniform').
+        cluster_selection (bool, optional): Whether to select top clusters for trading (default: False).
+        num_dates (int, optional): Total number of trading dates (default: None, inferred from eligible_dates).
+        num_clusters (int, optional): Number of clusters to use for clustering (default: 40).
+        num_trading_clusters (int, optional): Number of clusters to select for trading (default: 40).
+    Returns:
+        tuple:
+            daily_PnL (list of float): List of daily profit and loss values for each trading day.
+            date (pd.DatetimeIndex): Corresponding dates for each PnL value.
+            success_rate (float): Fraction of trading periods where the win_threshold was reached.
+    Notes:
+        - The function relies on several helper functions (e.g., get_sliding_window_data, clusterize, assign_stock_weights).
+        - The strategy can be customized via clustering, weighting, and winsorization options.
+        - Prints progress and success rate during execution.
+    """
+    
     # record the total number of days
     if num_dates is None:
         num_dates = len(eligible_dates)

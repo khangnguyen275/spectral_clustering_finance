@@ -24,6 +24,14 @@ import pandas as pd
 import time
 
 def get_ordered_csv_file_names(folder_path):
+    """
+    Returns a sorted list of CSV file names (with '.csv.gz' extension) from the specified folder.
+    Args:
+        folder_path (str): Path to the folder containing files.
+    Returns:
+        list[str]: Alphabetically sorted list of CSV file names ending with '.csv.gz'.
+    """
+    
     all_file_names = os.listdir(folder_path)
     csv_file_names = []
     for file_name in all_file_names:
@@ -33,6 +41,18 @@ def get_ordered_csv_file_names(folder_path):
     return csv_file_names
 
 def get_all_date_paths(path):
+    """
+    Collects and returns a list of file paths for all CSV files within yearly subdirectories from 2000 to 2021.
+    Args:
+        path (str): The root directory containing yearly subfolders named by year (e.g., '2000', '2001', ...).
+    Returns:
+        list of str: A list of file paths to CSV files, ordered by date, from all existing yearly subfolders.
+    Notes:
+        - Assumes the existence of a helper function `get_ordered_csv_file_names(year_folder_path)` that returns
+          a list of CSV file names ordered by date within the given folder.
+        - Prints a message if a yearly folder is not found.
+    """
+    
     eligible_dates = []
     for year in range(2000, 2022):
         # construct the path to each year's folder
@@ -49,6 +69,16 @@ def get_all_date_paths(path):
     return eligible_dates
 
 def check_valid_file_paths(file_path_array):
+    """
+    Checks if all paths in the given array are valid file paths.
+    Args:
+        file_path_array (list of str): List of file paths to check.
+    Returns:
+        None
+    Prints:
+        An error message for the first invalid file path found, or a success message if all are valid.
+    """
+    
     all_paths_are_files = True
     for p in file_path_array:
         if not os.path.isfile(p):
@@ -60,6 +90,16 @@ def check_valid_file_paths(file_path_array):
         print("All paths are valid file paths.")
 
 def get_eligible_date_paths(available_dates, output_path):
+    """
+    Classifies files as eligible if 10% or fewer 'pvCLCL' values are zero; otherwise, ineligible.
+    Saves eligible and ineligible file paths to separate text files.
+    Args:
+        available_dates (list of str): Paths to gzipped CSV files.
+        output_path (str): File to save eligible dates.
+    Returns:
+        (eligible_dates, ineligible_dates): Tuple of lists.
+    """
+    
     eligible_dates = []
     ineligible_dates = []
     for date in available_dates:

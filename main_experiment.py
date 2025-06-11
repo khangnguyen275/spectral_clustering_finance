@@ -1,8 +1,6 @@
 import sys
 import os
 import argparse
-import re
-import matplotlib.pyplot as plt
 from utils.metrics import *
 import csv
 np.set_printoptions(precision=8, suppress=False)

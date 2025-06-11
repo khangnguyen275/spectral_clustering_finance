@@ -2,9 +2,25 @@ import pandas as pd
 import numpy as np
 
 def construct_short_price_matrix(eligible_dates,
-                              lookback_window = 60,
-                              lookforward_window = 3,
-                              start_date = 0):
+                               lookback_window=60,
+                               lookforward_window=3,
+                               start_date=0):
+  """
+  Constructs a cleaned price matrix for a short window of dates, focusing on tickers between 'SPY' and the first ticker starting with 'A'.
+  This function reads compressed CSV files containing price data for a sequence of dates, extracts the 'close' prices for each ticker, 
+  and merges them into a single DataFrame. It specifically retains only the rows for 'SPY' and all tickers that appear after 'SPY' 
+  but before the first ticker starting with 'A' (exclusive). The resulting DataFrame is cleaned by removing any rows with missing values.
+  Args:
+    eligible_dates (list of str): List of file paths to the daily price data CSV files, ordered by date.
+    lookback_window (int, optional): Number of days to look back from the start_date. Defaults to 60.
+    lookforward_window (int, optional): Number of days to look forward from the start_date. Defaults to 3.
+    start_date (int, optional): Index in eligible_dates to start the window. Defaults to 0.
+  Returns:
+    pandas.DataFrame: A cleaned DataFrame where each row is a ticker (with 'SPY' as the first row), 
+              columns are dates (as extracted from file names), and values are close prices. 
+              All rows with any missing values are dropped.
+  """
+  
   # get the paths to the dates in the lookback_window + lookforward_window + 1 day buffer
   end_date = start_date + lookback_window + lookforward_window
   price_window_paths = eligible_dates[start_date : end_date + 1]
@@ -53,6 +69,28 @@ def construct_short_price_matrix(eligible_dates,
   return close_price_cleaned
 
 def construct_return_df(close_price, return_type = 'linear'):
+  def construct_return_df(close_price, return_type='linear'):
+    """
+    Constructs a DataFrame of asset returns from a DataFrame of close prices.
+    Parameters
+    ----------
+    close_price : pandas.DataFrame
+      DataFrame containing asset close prices. Must include a 'ticker' column and one or more date columns.
+    return_type : str, optional
+      Type of return to compute: 
+      - 'linear' for simple percentage returns (default)
+      - 'log' for logarithmic returns
+    Returns
+    -------
+    pandas.DataFrame
+      DataFrame of returns with 'ticker' as the first column, followed by return columns for each date (excluding the first date, which will be dropped due to NaN values from differencing).
+    Notes
+    -----
+    - The first date column is dropped from the returns DataFrame since returns cannot be computed for the initial date.
+    - The function preserves the order of tickers and dates as in the input DataFrame.
+    - Requires `numpy` as `np` if using log returns.
+    """
+  
   # Select only the date columns (exclude 'ticker')
   price_data = close_price.drop(columns=['ticker'])
 
@@ -85,6 +123,27 @@ def clean_return_df(return_df,
                     drop_0_threshold = 0.5,
                     drop_large_threshold = 0.1,
                     large_return_threshold = 1.0):
+  """
+  Cleans a DataFrame of ETF returns by removing rows (ETFs) that have an excessive proportion of zero or abnormally large returns.
+  Parameters
+  ----------
+  return_df : pd.DataFrame
+    DataFrame contasining ETF returns. Must include a 'ticker' column and columns for each date with return values.
+  drop_0_threshold : float, optional (default=0.5)
+    The maximum allowed proportion of zero returns for an ETF. Rows with a higher proportion are removed.
+  drop_large_threshold : float, optional (default=0.1)
+    The maximum allowed proportion of large returns (greater than `large_return_threshold`) for an ETF. Rows with a higher proportion are removed.
+  large_return_threshold : float, optional (default=1.0)
+    The threshold above which a return is considered "large".
+  Returns
+  -------
+  cleaned_return_df : pd.DataFrame
+    A DataFrame with rows (ETFs) removed if they exceed the specified thresholds for zero or large returns.
+  Notes
+  -----
+  - NaN values are ignored in the calculation of proportions.
+  - The 'ticker' column is preserved in the output DataFrame.
+  """
   # Get the date columns (excluding 'ticker')
   date_cols = return_df.columns.drop('ticker')
 

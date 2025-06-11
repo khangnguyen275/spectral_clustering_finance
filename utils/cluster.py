@@ -91,6 +91,45 @@ def get_num_of_clusters(corr, thr):
             return i+1
 
 def clusterize(cl_med: str, num_med: str, R_cov: pd.DataFrame, market_cov, winsorize_res, winsor_param, clustering_window=20, num_clusters=40):
+    """
+    Clusterizes assets based on their residual returns correlation structure using different clustering methods.
+    Parameters
+    ----------
+    cl_med : str
+        The clustering method to use. Supported values:
+        - 'SPONGE': Use the SPONGE algorithm for clustering.
+        - 'industry': (Commented out) Cluster based on industry data.
+    num_med : str
+        Method to determine the number of clusters. Supported values:
+        - 'var': Use explained variance to determine the number of clusters.
+        - 'mar-pa': Use the Marchenko-Pastur distribution to determine the number of clusters.
+        - 'self': Use the user-specified number of clusters.
+    R_cov : pd.DataFrame
+        DataFrame containing asset returns (or residual returns) to be clustered.
+    market_cov : pd.DataFrame or np.ndarray
+        Data representing the market returns or market covariance, used to compute residual returns.
+    winsorize_res : bool
+        Whether to winsorize the residual returns before clustering.
+    winsor_param : float
+        The winsorization parameter (e.g., 0.01 for 1% winsorization).
+    clustering_window : int, optional
+        The window size (number of periods) to use for clustering, by default 20.
+    num_clusters : int, optional
+        The number of clusters to use if `num_med` is 'self', by default 40.
+    Returns
+    -------
+    pd.DataFrame
+        The input DataFrame `R_cov` with an added 'cluster' column indicating the cluster assignment for each asset.
+    Notes
+    -----
+    - This is the main clustering function that can be used to cluster assets based on their residual returns.
+    - If the clustering method is 'SPONGE', the function computes the correlation matrix of residual returns and applies the SPONGE algorithm.
+    - The number of clusters can be determined by explained variance, the Marchenko-Pastur distribution, or set manually.
+    - If winsorization is enabled, each asset's residual returns are winsorized before clustering.
+    - If clustering cannot be performed (e.g., invalid number of clusters), all assets are assigned to a default cluster (-1).
+    - The 'industry' clustering method is present in comments and not currently active.
+    """
+    
     R = R_cov.copy()
     market = market_cov.copy()
 

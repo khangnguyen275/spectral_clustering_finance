@@ -1,6 +1,17 @@
 import numpy as np
 
 def get_eligible_date_paths_from_file(file_path):
+    """
+    Reads a file containing paths (one per line) and returns a list of cleaned paths.
+    Args:
+        file_path (str): The path to the file containing eligible date paths.
+    Returns:
+        list: A list of strings, each representing a cleaned path read from the file.
+              Returns an empty list if the file is not found or an error occurs.
+    Side Effects:
+        Prints the number of successfully read paths or error messages to the console.
+    """
+    
     eligible_dates_from_file = []
     # Open the file in read mode ('r')
     try:
