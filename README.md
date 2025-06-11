@@ -1,6 +1,6 @@
 # Math 285J Project - Ablation Study for Correlation Matrix Clustering for Statistical Arbitrage Portfolios
 
-This repository contains code and experiments for the Math 285J: Topics in Data Science and Machine Learning for Finance final project. The authors for this project are Yifan Gu, Khang Nguyen, and Lunji Zhu.
+This repository contains code and experiments for the Math 285J: Topics in Data Science and Machine Learning for Finance final project with Professor Mihai Cucuringu. The authors for this project are Yifan Gu, Khang Nguyen, and Lunji Zhu.
 
 > **Project description:**  
 > Financial data suffers from the curse of dimensionality and is well-known to be ill-conditioned. To tackle these issues, techniques such as dimensionality reduction and clustering have previously been employed. Recently, Jin et al. (2023) [^1] and Khelifa et al. (2024) [^2] proposed constructing portfolio strategies using signed graph clustering methods such as the Signed Positive Over Negative Generalized Eigenproblem (SPONGE) [^3]. These approaches generate profitable trading strategies with over 10% annualized returns and statistically significant Sharpe ratios above one.  
@@ -13,9 +13,7 @@ This repository contains code and experiments for the Math 285J: Topics in Data 
 
 [^3]: Cucuringu, M., et al. (2019). SPONGE: Signed Positive Over Negative Generalized Eigenproblem.
 
-
-
-See the project report and slides in this github page for more details.
+See the [project report](./285J_Project_Report.pdf) and [slides](./285J_Project_Slides.pdf) in this github page for more details.
 
 ## Project Structure
 - `preprocessing.py`: Preprocesses CRSP data by validating file paths and filtering dates based on the percentage of zero values in the 'pvCLCL' column. 
